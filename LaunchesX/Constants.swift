@@ -8,5 +8,8 @@
 import Foundation
 
 struct K {
-    let segue = "listToDetail"
+    static let segue = "listToDetail"
+    static let url = "https://api.spacexdata.com/v5/launches/past"
+    static let cell = "listCell"
+    static let imgCell = "imageCell"
 }
