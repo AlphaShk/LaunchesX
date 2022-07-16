@@ -16,6 +16,8 @@ class ListViewController: UIViewController {
     
     var sortOption: SortOption?
     
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Options.plist")
+    
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var tableView: UITableView!
     
@@ -25,9 +27,9 @@ class ListViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
         fetchRequest()
         
+        loadOptions()
     }
     
     func fetchRequest() {
@@ -39,7 +41,7 @@ class ListViewController: UIViewController {
                     do {
                         self.launches = try decoder.decode([Launch].self, from: data)
                         self.filteredLaunches = self.launches ?? []
-                        
+                        self.sortLaunches()
                     } catch {
                         print(error)
                     }
@@ -50,48 +52,138 @@ class ListViewController: UIViewController {
         }
     }
     
+    
+    func saveOptions() {
+        
+        let encoder = PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(self.sortOption)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print(error)
+        }
+        self.sortLaunches()
+    }
+    func loadOptions() {
+        
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            
+            let decoder = PropertyListDecoder()
+            
+            do {
+                self.sortOption = try decoder.decode(SortOption.self, from: data)
+                
+                sortLaunches()
+            } catch {
+                print(error)
+            }
+        }
+        
+        
+    }
     func sortLaunches() {
-        if let option = sortOption {
+        
+        if let option = self.sortOption {
             switch option {
             case .descending:
                 filteredLaunches = filteredLaunches.sorted { $0.name > $1.name }
+                launches = launches?.sorted { $0.name > $1.name }
             case .ascending:
                 filteredLaunches = filteredLaunches.sorted { $0.name < $1.name }
+                launches = launches?.sorted { $0.name < $1.name }
             case .dataAscending:
-                filteredLaunches = filteredLaunches.sorted { ($0.date_local?.getDate())! < ($1.date_local?.getDate())! }
+                filteredLaunches = filteredLaunches.sorted {
+                    if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
+                        return first < second
+                    } else {
+                        if $0.date_local?.getDate() == nil && $1.date_local?.getDate() != nil {
+                            return false
+                        } else if $0.date_local?.getDate() != nil && $1.date_local?.getDate() == nil {
+                            return true
+                        } else {
+                            return true
+                        }
+                    }
+                }
+                launches = launches?.sorted {
+                    if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
+                        return first < second
+                    } else {
+                        if $0.date_local?.getDate() == nil && $1.date_local?.getDate() != nil {
+                            return false
+                        } else if $0.date_local?.getDate() != nil && $1.date_local?.getDate() == nil {
+                            return true
+                        } else {
+                            return true
+                        }
+                    }
+                }
             case .dataDescending:
-                filteredLaunches = filteredLaunches.sorted { ($0.date_local?.getDate())! > ($1.date_local?.getDate())! }
+                filteredLaunches = filteredLaunches.sorted {
+                    if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
+                        return first > second
+                    } else {
+                        if $0.date_local?.getDate() == nil && $1.date_local?.getDate() != nil {
+                            return false
+                        } else if $0.date_local?.getDate() != nil && $1.date_local?.getDate() == nil {
+                            return true
+                        } else {
+                            return true
+                        }
+                    }
+                }
+                launches = launches?.sorted {
+                    if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
+                        return first > second
+                    } else {
+                        if $0.date_local?.getDate() == nil && $1.date_local?.getDate() != nil {
+                            return false
+                        } else if $0.date_local?.getDate() != nil && $1.date_local?.getDate() == nil {
+                            return true
+                        } else {
+                            return true
+                        }
+                    }
+                }
             }
         }
+        
         tableView.reloadData()
     }
 
     @IBAction func edit(_ sender: UIBarButtonItem) {
         let actionSheet = UIAlertController(title: "Sort table", message: nil, preferredStyle: .actionSheet)
         let cancel = UIAlertAction(title: "Cancel", style: .cancel)
-        let aToz = UIAlertAction(title: "A-Z", style: .default) {_ in
+        
+        let aToz = UIAlertAction(title: "From A To Z", style: .default) {_ in
             self.sortOption = .ascending
-            self.sortLaunches()
+            self.saveOptions()
+            
         }
-        let zToa = UIAlertAction(title: "Z-A", style: .default) {_ in
+        let zToa = UIAlertAction(title: "From Z To A", style: .default) {_ in
             self.sortOption = .descending
-            self.sortLaunches()
+            self.saveOptions()
+            
         }
         let fromOldest = UIAlertAction(title: "From Oldest to Newest", style: .default) {_ in
             self.sortOption = .dataAscending
-            self.sortLaunches()
+            self.saveOptions()
+            
         }
         let fromNewest = UIAlertAction(title: "From Newest to Oldest", style: .default) {_ in
             self.sortOption = .dataDescending
-            self.sortLaunches()
+            self.saveOptions()
+            
         }
+        
         actionSheet.addAction(cancel)
         actionSheet.addAction(aToz)
         actionSheet.addAction(zToa)
         actionSheet.addAction(fromNewest)
         actionSheet.addAction(fromOldest)
-         
-        present(actionSheet, animated: true)
+        
+        self.present(actionSheet, animated: true)
     }
     
    
@@ -170,6 +262,7 @@ extension ListViewController: UITableViewDelegate, UITableViewDataSource {
 extension ListViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         guard let launches = launches else { return }
+        
         if searchText.isEmpty {
             
             filteredLaunches = launches

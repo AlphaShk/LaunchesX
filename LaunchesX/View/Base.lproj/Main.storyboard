@@ -78,11 +78,10 @@
                                         <rect key="frame" x="0.0" y="0.0" width="428" height="848"/>
                                         <subviews>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="sLb-YZ-TSf" customClass="YTPlayerView">
-                                                <rect key="frame" x="35.666666666666657" y="0.0" width="357" height="180"/>
+                                                <rect key="frame" x="35" y="0.0" width="358" height="180"/>
                                                 <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="180" id="gQD-WY-N9i"/>
-                                                    <constraint firstAttribute="width" constant="357" id="zGe-8r-b1p"/>
                                                 </constraints>
                                             </view>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Description" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="S6q-RB-baP">
@@ -138,8 +137,10 @@
                                             <constraint firstItem="S6q-RB-baP" firstAttribute="leading" secondItem="fZZ-Bu-DFR" secondAttribute="leading" constant="8" id="ELa-Cc-NwV"/>
                                             <constraint firstAttribute="trailing" secondItem="S6q-RB-baP" secondAttribute="trailing" constant="8" id="GLL-0D-6Bd"/>
                                             <constraint firstAttribute="trailing" secondItem="df9-ye-Rxe" secondAttribute="trailing" id="Gve-qL-Dle"/>
+                                            <constraint firstItem="sLb-YZ-TSf" firstAttribute="leading" secondItem="fZZ-Bu-DFR" secondAttribute="leading" constant="35" id="OVN-TM-SQK"/>
                                             <constraint firstAttribute="height" constant="848" id="Wi7-Q6-otn"/>
                                             <constraint firstItem="df9-ye-Rxe" firstAttribute="top" secondItem="S6q-RB-baP" secondAttribute="bottom" constant="20" id="giU-Gn-Ujx"/>
+                                            <constraint firstAttribute="trailing" secondItem="sLb-YZ-TSf" secondAttribute="trailing" constant="35" id="mVs-Bf-wEE"/>
                                             <constraint firstItem="sLb-YZ-TSf" firstAttribute="top" secondItem="fZZ-Bu-DFR" secondAttribute="top" id="prL-E0-ATH"/>
                                             <constraint firstItem="df9-ye-Rxe" firstAttribute="leading" secondItem="fZZ-Bu-DFR" secondAttribute="leading" id="u95-LJ-G9z"/>
                                             <constraint firstItem="S6q-RB-baP" firstAttribute="top" secondItem="sLb-YZ-TSf" secondAttribute="bottom" constant="8" symbolic="YES" id="zGN-F9-Was"/>

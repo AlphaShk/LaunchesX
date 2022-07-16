@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum SortOption {
+enum SortOption: Codable {
     case ascending
     case descending
     case dataAscending
