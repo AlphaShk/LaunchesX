@@ -21,6 +21,7 @@ class LaunchDetailController: UIViewController, WKUIDelegate {
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var label: UILabel!
     @IBOutlet weak var playerView: YTPlayerView!
+        // Specific view that can show YouTube videos using ID
     
     
     override func viewDidLoad() {
@@ -35,7 +36,7 @@ class LaunchDetailController: UIViewController, WKUIDelegate {
         if let details = details {
             label.text = details
         } else {
-            label.removeFromSuperview()
+            label.removeFromSuperview() // Delete views to make more space for other views
         }
         
         if let images = imageArray {
@@ -64,6 +65,7 @@ extension LaunchDetailController: UICollectionViewDelegate, UICollectionViewData
             
             cell.launchImageView.sd_setImage(with: URL(string: images[indexPath.row]))
             cell.launchImageView.layer.cornerRadius = 10.0
+            
         }
         
         return cell

@@ -10,61 +10,65 @@ import Alamofire
 import SDWebImage
 
 class ListViewController: UIViewController {
-   
-    var launches: [Launch]?
-    var filteredLaunches = [Launch]()
     
-    var sortOption: SortOption?
+    var manager = LaunchManager() // launches must be initialized once after API request
+   
+    var filteredLaunches = [Launch]() // filteredLaunches changes after changing searchBar text
     
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Options.plist")
+        // Persist data (sortOption) in specific .plist file on device
+        // if sortOptions was String, it would be stored using UserDefaults
     
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var tableView: UITableView!
     
     override func viewWillAppear(_ animated: Bool) {
-        tableView.register(UINib(nibName: "ListCell", bundle: nil), forCellReuseIdentifier: K.cell)
+        tableView.register(UINib(nibName: "ListCell", bundle: nil), forCellReuseIdentifier: K.cell) // Register nib for custom cell
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        fetchRequest()
         
+        fetchRequest()
         loadOptions()
+        
     }
     
     func fetchRequest() {
         
         Alamofire.request(K.url, method: .get).responseJSON() { response in
+            
             if response.result.isSuccess {
                 if let data = response.data {
                     let decoder = JSONDecoder()
                     do {
-                        self.launches = try decoder.decode([Launch].self, from: data)
-                        self.filteredLaunches = self.launches ?? []
-                        self.sortLaunches()
+                        self.manager.setLaunches(try decoder.decode([Launch].self, from: data))
+                        self.filteredLaunches = self.manager.getSortedLaunches()
+                        
                     } catch {
                         print(error)
                     }
                 }
-                
                 self.tableView.reloadData()
             }
         }
+        
     }
     
+//MARK: - Local Data Persistence methods
     
     func saveOptions() {
         
         let encoder = PropertyListEncoder()
         
         do {
-            let data = try encoder.encode(self.sortOption)
+            let data = try encoder.encode(manager.getSortOption())
             try data.write(to: dataFilePath!)
         } catch {
             print(error)
         }
-        self.sortLaunches()
     }
+    
     func loadOptions() {
         
         if let data = try? Data(contentsOf: dataFilePath!) {
@@ -72,109 +76,51 @@ class ListViewController: UIViewController {
             let decoder = PropertyListDecoder()
             
             do {
-                self.sortOption = try decoder.decode(SortOption.self, from: data)
-                
-                sortLaunches()
+                manager.setSortOption( try decoder.decode(SortOption.self, from: data))
+                sortFilteredLaunches()
             } catch {
                 print(error)
             }
         }
-        
-        
     }
-    func sortLaunches() {
+    
+    func sortFilteredLaunches() {
         
-        if let option = self.sortOption {
-            switch option {
-            case .descending:
-                filteredLaunches = filteredLaunches.sorted { $0.name > $1.name }
-                launches = launches?.sorted { $0.name > $1.name }
-            case .ascending:
-                filteredLaunches = filteredLaunches.sorted { $0.name < $1.name }
-                launches = launches?.sorted { $0.name < $1.name }
-            case .dataAscending:
-                filteredLaunches = filteredLaunches.sorted {
-                    if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
-                        return first < second
-                    } else {
-                        if $0.date_local?.getDate() == nil && $1.date_local?.getDate() != nil {
-                            return false
-                        } else if $0.date_local?.getDate() != nil && $1.date_local?.getDate() == nil {
-                            return true
-                        } else {
-                            return true
-                        }
-                    }
-                }
-                launches = launches?.sorted {
-                    if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
-                        return first < second
-                    } else {
-                        if $0.date_local?.getDate() == nil && $1.date_local?.getDate() != nil {
-                            return false
-                        } else if $0.date_local?.getDate() != nil && $1.date_local?.getDate() == nil {
-                            return true
-                        } else {
-                            return true
-                        }
-                    }
-                }
-            case .dataDescending:
-                filteredLaunches = filteredLaunches.sorted {
-                    if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
-                        return first > second
-                    } else {
-                        if $0.date_local?.getDate() == nil && $1.date_local?.getDate() != nil {
-                            return false
-                        } else if $0.date_local?.getDate() != nil && $1.date_local?.getDate() == nil {
-                            return true
-                        } else {
-                            return true
-                        }
-                    }
-                }
-                launches = launches?.sorted {
-                    if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
-                        return first > second
-                    } else {
-                        if $0.date_local?.getDate() == nil && $1.date_local?.getDate() != nil {
-                            return false
-                        } else if $0.date_local?.getDate() != nil && $1.date_local?.getDate() == nil {
-                            return true
-                        } else {
-                            return true
-                        }
-                    }
-                }
-            }
-        }
+        filteredLaunches = manager.sortLaunches(filteredLaunches, by: manager.getSortOption())
         
         tableView.reloadData()
     }
-
+    
+//MARK: - ActionSheet
+    
     @IBAction func edit(_ sender: UIBarButtonItem) {
+        
         let actionSheet = UIAlertController(title: "Sort table", message: nil, preferredStyle: .actionSheet)
+        
         let cancel = UIAlertAction(title: "Cancel", style: .cancel)
         
         let aToz = UIAlertAction(title: "From A To Z", style: .default) {_ in
-            self.sortOption = .ascending
+            self.manager.setSortOption(.ascending)
             self.saveOptions()
-            
+            self.sortFilteredLaunches()
+
         }
         let zToa = UIAlertAction(title: "From Z To A", style: .default) {_ in
-            self.sortOption = .descending
+            self.manager.setSortOption(.descending)
             self.saveOptions()
+            self.sortFilteredLaunches()
             
         }
         let fromOldest = UIAlertAction(title: "From Oldest to Newest", style: .default) {_ in
-            self.sortOption = .dataAscending
+            self.manager.setSortOption(.dataAscending)
             self.saveOptions()
+            self.sortFilteredLaunches()
             
         }
         let fromNewest = UIAlertAction(title: "From Newest to Oldest", style: .default) {_ in
-            self.sortOption = .dataDescending
+            self.manager.setSortOption(.dataDescending)
             self.saveOptions()
-            
+            self.sortFilteredLaunches()
         }
         
         actionSheet.addAction(cancel)
@@ -187,36 +133,33 @@ class ListViewController: UIViewController {
     }
     
    
-    // MARK: - Navigation
+// MARK: - Navigation
 
-    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
         if segue.identifier == K.segue {
+            
             let ldc = segue.destination as! LaunchDetailController
-            if let indexPath = tableView.indexPathForSelectedRow {
+            
+            if let indexPath = tableView.indexPathForSelectedRow { // If some tableView cell was clicked
+                
                 ldc.imageArray = self.filteredLaunches[indexPath.row].links.flickr.original as? [String]
                 ldc.launchName = self.filteredLaunches[indexPath.row].name
                 ldc.details = self.filteredLaunches[indexPath.row].details
                 ldc.youtubeURL = self.filteredLaunches[indexPath.row].links.youtube_id
             }
         }
-        
     }
     
-
 }
 
-//MARK: - TableView
+//MARK: - TableViewDelegate, TableViewDataSource methods
 
 extension ListViewController: UITableViewDelegate, UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
 
-        if launches != nil {
-            return 1
-        }
-        return 0
+        return 1
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -232,13 +175,14 @@ extension ListViewController: UITableViewDelegate, UITableViewDataSource {
         
         if let patch = self.filteredLaunches[indexPath.row].links.patch.small {
             if let url = URL(string: patch) {
-                cell.patchImageView.sd_setImage(with: url)
+                cell.patchImageView.sd_setImage(with: url) // Parse image from URL when creates cell
             }
         }
         let formatter = DateFormatter()
         formatter.dateFormat = K.dateFormat
         
         if let dateString = filteredLaunches[indexPath.row].date_local, let precision = filteredLaunches[indexPath.row].date_precision {
+            
             let date = formatter.date(from: dateString)
             cell.dateLabel.text = date?.toString(with: precision)
         }
@@ -257,18 +201,17 @@ extension ListViewController: UITableViewDelegate, UITableViewDataSource {
     
 }
 
-//MARK: - SearchBarDelegate
+//MARK: - SearchBarDelegate methods
 
 extension ListViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        guard let launches = launches else { return }
         
         if searchText.isEmpty {
             
-            filteredLaunches = launches
+            filteredLaunches = manager.getSortedLaunches()
         } else {
             
-            filteredLaunches = launches.filter { $0.name.lowercased().contains(searchText.lowercased()) }
+            filteredLaunches = manager.getSortedLaunches().filter { $0.name.lowercased().contains(searchText.lowercased()) }
         }
         
         self.tableView.reloadData()
@@ -280,14 +223,20 @@ extension ListViewController: UISearchBarDelegate {
     }
 }
 
+//MARK: - Type Extensions
+
 extension Date {
     
-    func toString(with precision: String) -> String {
+    func toString(with precision: String) -> String { // Specific method to get string from data with some precision
+        
         let formatter = DateFormatter()
         var dateString = ""
+        
         switch precision {
         case "quarter":
+            
             formatter.dateFormat = "MM"
+            
             if let month = Int(formatter.string(from: self)) {
                 if month > 8 && month < 12 {
                     dateString += "Autumn, "
@@ -299,10 +248,14 @@ extension Date {
                     dateString += "Winter, "
                 }
             }
+            
             formatter.dateFormat = "yyyy"
             dateString += formatter.string(from: self)
+            
         case "half":
+            
             formatter.dateFormat = "MM"
+            
             if let month = Int(formatter.string(from: self)) {
                 if month <= 6 {
                     dateString += "1HY"
@@ -310,20 +263,30 @@ extension Date {
                     dateString += "2HY"
                 }
             }
+            
             formatter.dateFormat = "yyyy"
             dateString += formatter.string(from: self)
+            
         case "year":
+            
             formatter.dateFormat = "yyyy"
             dateString = formatter.string(from: self)
+            
         case "month":
+            
             formatter.dateFormat = "MMM, yyyy"
             dateString = formatter.string(from: self)
+            
         case "day":
+            
             formatter.dateFormat = "MMM dd, yyyy"
             dateString = formatter.string(from: self)
+            
         case "hour":
+            
             formatter.dateFormat = "HH:mm, MMM dd, yyyy"
             dateString = formatter.string(from: self)
+            
         default:
             break
         }
@@ -332,9 +295,12 @@ extension Date {
 }
 
 extension String {
+    
     func getDate() -> Date? {
+        
         let formatter = DateFormatter()
         formatter.dateFormat = K.dateFormat
+        
         return formatter.date(from: self)
     }
 }
