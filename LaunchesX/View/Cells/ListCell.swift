@@ -10,18 +10,13 @@ import UIKit
 class ListCell: UITableViewCell {
 
     @IBOutlet weak var patchImageView: UIImageView!
-    @IBOutlet weak var label: UILabel!
+    @IBOutlet weak var nameLabel: UILabel!
+    @IBOutlet weak var dateLabel: UILabel!
+    @IBOutlet weak var backView: UIView!
     
     override func awakeFromNib() {
-        super.awakeFromNib()
-        // Initialization code
+        
+        backView.layer.cornerRadius = 15.0
     }
-
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
-    }
-    
     
 }

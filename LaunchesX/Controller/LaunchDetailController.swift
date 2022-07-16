@@ -7,46 +7,46 @@
 
 import UIKit
 import SDWebImage
+import WebKit
+import youtube_ios_player_helper
 
-
-class LaunchDetailController: UIViewController {
+class LaunchDetailController: UIViewController, WKUIDelegate {
 
     var imageArray: [String]?
     var launchName: String?
     var details: String?
     
+    var youtubeURL: String?
+    
     @IBOutlet weak var collectionView: UICollectionView!
-    @IBOutlet weak var launchLabel: UILabel!
-    @IBOutlet weak var textView: UITextView!
+    @IBOutlet weak var label: UILabel!
+    @IBOutlet weak var playerView: YTPlayerView!
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        launchLabel.alpha = 0.0
-        textView.alpha = 0.0
         
-        launchLabel.text = launchName
+        title = launchName
+        
+        if let id = youtubeURL {
+            playerView.load(withVideoId: id)
+            
+        }
         if let details = details {
-            textView.text = details
+            label.text = details
         } else {
-            textView.removeFromSuperview()
+            label.removeFromSuperview()
         }
-        UIView.animate(withDuration: 1.5, delay: 0.5, animations: {
-            self.launchLabel.alpha = 1.0
-        })
-        UIView.animate(withDuration: 1.5, delay: 1.0, animations: {
-            self.textView.alpha = 1.0
-        })
         
-        if imageArray!.isEmpty {
+        if let images = imageArray {
+            if images.isEmpty {
+                collectionView.removeFromSuperview()
+            }
+        } else {
             collectionView.removeFromSuperview()
-            let constraint = NSLayoutConstraint(item: launchLabel, attribute: NSLayoutConstraint.Attribute.top, relatedBy: NSLayoutConstraint.Relation.equal, toItem: view.safeAreaLayoutGuide, attribute: NSLayoutConstraint.Attribute.top, multiplier: 1, constant: 5)
-            launchLabel.translatesAutoresizingMaskIntoConstraints = false
-            NSLayoutConstraint.activate([constraint])
-            
-            
         }
+        
     }
-
 
 }
 
@@ -61,24 +61,11 @@ extension LaunchDetailController: UICollectionViewDelegate, UICollectionViewData
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: K.imgCell, for: indexPath) as! ImageCell
         if let images = imageArray {
+            
             cell.launchImageView.sd_setImage(with: URL(string: images[indexPath.row]))
-            cell.launchImageView.layer.cornerRadius = 50.0
+            cell.launchImageView.layer.cornerRadius = 10.0
         }
         
         return cell
     }
-    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        UIView.animate(withDuration: 1.5, delay: 0.5, animations: {
-            (cell as! ImageCell).launchImageView.alpha = 1.0
-        })
-    }
-
-    func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
-        let cell = collectionView.cellForItem(at: indexPath)
-        UIView.animate(withDuration: 1.5, delay: 0.5, animations: {
-            (cell as! ImageCell).launchImageView.alpha = 1.0
-        })
-        return true
-    }
-    
 }

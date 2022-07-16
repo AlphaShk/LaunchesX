@@ -12,4 +12,6 @@ struct K {
     static let url = "https://api.spacexdata.com/v5/launches/past"
     static let cell = "listCell"
     static let imgCell = "imageCell"
+    static let dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
 }
+
