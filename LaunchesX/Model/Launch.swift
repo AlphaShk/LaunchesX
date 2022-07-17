@@ -1,10 +1,3 @@
-//
-//  Launch.swift
-//  LaunchesX
-//
-//  Created by Denys Shkola on 13.07.2022.
-//
-
 import Foundation
 
 struct Launch: Codable {

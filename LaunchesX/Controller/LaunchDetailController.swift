@@ -1,13 +1,5 @@
-//
-//  ViewController.swift
-//  LaunchesX
-//
-//  Created by Denys Shkola on 12.07.2022.
-//
-
 import UIKit
 import SDWebImage
-import WebKit
 import youtube_ios_player_helper
 
 class LaunchDetailController: UIViewController, WKUIDelegate {
@@ -36,7 +28,7 @@ class LaunchDetailController: UIViewController, WKUIDelegate {
         if let details = details {
             label.text = details
         } else {
-            label.removeFromSuperview() // Delete views to make more space for other views
+            label.removeFromSuperview() // Delete views from main
         }
         
         if let images = imageArray {

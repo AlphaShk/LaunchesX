@@ -1,41 +1,42 @@
-//
-//  LaunchManager.swift
-//  LaunchesX
-//
-//  Created by Denys Shkola on 16.07.2022.
-//
-
 import Foundation
 import Alamofire
 
-class LaunchManager {
+struct LaunchManager {
     
-    var launches: [Launch]?
-    var sortOption: SortOption?
-    
-    func getSortedLaunches() -> [Launch] {
-        return sortLaunches(launches ?? [], by: sortOption)
+    func fetchRequest(with url: String = K.url, completion: @escaping ([Launch]) -> Void) {
+
+        Alamofire.request(url, method: .get).responseJSON() { response in
+            
+            if response.result.isSuccess {
+                
+                if let data = response.data {
+                    
+                    let decoder = JSONDecoder()
+                    
+                    do {
+                        let launches = try decoder.decode([Launch].self, from: data)
+                        completion(launches)
+                    } catch {
+                        print(error)
+                    }
+                }
+            }
+        }
     }
-    func setLaunches(_ new: [Launch]) {
-        launches = new
-    }
-    func getSortOption() -> SortOption {
-        return sortOption ?? .dataAscending
-    }
-    func setSortOption(_ new: SortOption) {
-        sortOption = new
-    }
-    
     
     func sortLaunches(_  launches: [Launch], by sortOption: SortOption?) -> [Launch] {
         var result = [Launch]()
         
         if let option = sortOption {
+            
             switch option {
+                
             case .descending:
                 result = launches.sorted { $0.name > $1.name }
+                
             case .ascending:
                 result = launches.sorted { $0.name < $1.name }
+                
             case .dataAscending:
                 result = launches.sorted {
                     if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
@@ -50,6 +51,7 @@ class LaunchManager {
                         }
                     }
                 }
+                
             case .dataDescending:
                 result = launches.sorted {
                     if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
@@ -66,6 +68,7 @@ class LaunchManager {
                 }
             }
         }
+        
         return result
     }
     
