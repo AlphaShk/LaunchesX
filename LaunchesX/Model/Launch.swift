@@ -2,12 +2,8 @@ import Foundation
 
 struct Launch: Codable {
     let links: Links
-    let details: String?
-    let name: String
-    let id: String
-    let date_local: String?
-    let date_precision: String?
-
+    let name: String // name can't be nil
+    let details, date_local, date_precision: String?
 }
 
 
@@ -15,10 +11,7 @@ struct Launch: Codable {
 struct Links: Codable {
     let patch: Patch
     let flickr: Flickr
-    let webcast: String?
     let youtube_id: String?
-    let article: String?
-    let wikipedia: String?
 }
 
 // MARK: - Flickr

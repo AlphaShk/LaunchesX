@@ -22,7 +22,7 @@ class ListViewController: UIViewController {
         
         super.viewDidLoad()
         
-        manager.fetchRequest() { launches in
+        manager.performRequest() { launches in
             
             self.model.launches = launches
             self.loadOptions()
@@ -33,7 +33,7 @@ class ListViewController: UIViewController {
     func sortLaunches() {
         
         model.launches = manager.sortLaunches(model.launches ?? [], by: model.sortOption)
-        tableView.reloadData()
+        self.tableView.reloadData()
     }
     
 //MARK: - Local Data Persistence methods
@@ -86,13 +86,13 @@ class ListViewController: UIViewController {
             
         }
         let fromOldest = UIAlertAction(title: "From Oldest to Newest", style: .default) {_ in
-            self.model.sortOption = .dataAscending
+            self.model.sortOption = .dateAscending
             self.sortLaunches()
             self.saveOptions()
             
         }
         let fromNewest = UIAlertAction(title: "From Newest to Oldest", style: .default) {_ in
-            self.model.sortOption = .dataDescending
+            self.model.sortOption = .dateDescending
             self.sortLaunches()
             self.saveOptions()
             
@@ -118,10 +118,11 @@ class ListViewController: UIViewController {
             
             if let indexPath = tableView.indexPathForSelectedRow { // If some tableView cell was clicked
                 
-                ldc.imageArray = model.getFilteredLaunches()[indexPath.row].links.flickr.original as? [String]
-                ldc.launchName = model.getFilteredLaunches()[indexPath.row].name
-                ldc.details = model.getFilteredLaunches()[indexPath.row].details
-                ldc.youtubeURL = model.getFilteredLaunches()[indexPath.row].links.youtube_id
+                let launches = model.filteredLaunches
+                ldc.imageArray = launches[indexPath.row].links.flickr.original as? [String]
+                ldc.launchName = launches[indexPath.row].name
+                ldc.details = launches[indexPath.row].details
+                ldc.youtubeURL = launches[indexPath.row].links.youtube_id
             }
         }
     }
@@ -139,13 +140,13 @@ extension ListViewController: UITableViewDelegate, UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return model.getFilteredLaunches().count
+        return model.filteredLaunches.count
     }
 
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let launches = model.getFilteredLaunches()
+        let launches = model.filteredLaunches
         let cell = tableView.dequeueReusableCell(withIdentifier: K.cell, for: indexPath) as! ListCell
         
         cell.nameLabel.text = launches[indexPath.row].name

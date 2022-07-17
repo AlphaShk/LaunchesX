@@ -6,12 +6,11 @@ class LaunchModel {
     var sortOption: SortOption?
     var filterString: String?
     
-    func getFilteredLaunches() -> [Launch] {
-        if let filterString = filterString {
-            return launches?.filter { $0.name.lowercased().contains(filterString.lowercased()) } ?? []
+    var filteredLaunches: [Launch] {
+        if let string = filterString {
+            return launches?.filter { $0.name.lowercased().contains(string.lowercased()) } ?? []
         } else {
             return launches ?? []
         }
     }
-    
 }

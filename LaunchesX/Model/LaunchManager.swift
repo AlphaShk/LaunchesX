@@ -3,7 +3,7 @@ import Alamofire
 
 struct LaunchManager {
     
-    func fetchRequest(with url: String = K.url, completion: @escaping ([Launch]) -> Void) {
+    func performRequest(with url: String = K.url, completion: @escaping ([Launch]) -> Void) {
 
         Alamofire.request(url, method: .get).responseJSON() { response in
             
@@ -37,7 +37,7 @@ struct LaunchManager {
             case .ascending:
                 result = launches.sorted { $0.name < $1.name }
                 
-            case .dataAscending:
+            case .dateAscending:
                 result = launches.sorted {
                     if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
                         return first < second
@@ -52,7 +52,7 @@ struct LaunchManager {
                     }
                 }
                 
-            case .dataDescending:
+            case .dateDescending:
                 result = launches.sorted {
                     if let first = $0.date_local?.getDate(), let second = $1.date_local?.getDate() {
                         return first > second
