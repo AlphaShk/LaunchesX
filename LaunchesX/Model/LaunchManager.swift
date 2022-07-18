@@ -41,7 +41,7 @@ struct LaunchManager {
     }
     
     func sortLaunches(_  launches: [Launch], by sortOption: SortOption?) -> [Launch] {
-        var result = [Launch]()
+        var result = launches
         
         if let option = sortOption {
             

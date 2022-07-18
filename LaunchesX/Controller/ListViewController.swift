@@ -42,6 +42,7 @@ class ListViewController: UIViewController {
                     
                     self.model.setLaunches(new: launches)
                     self.loadOptions()
+                    self.sortLaunches()
                 }
             } else {
                 
@@ -88,7 +89,6 @@ class ListViewController: UIViewController {
             
             do {
                 model.sortOption = try decoder.decode(SortOption.self, from: data)
-                sortLaunches()
             } catch {
                 print(error)
             }
