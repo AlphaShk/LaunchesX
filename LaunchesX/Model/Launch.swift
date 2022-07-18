@@ -1,6 +1,7 @@
 import Foundation
 
 struct Launch: Codable {
+    
     let links: Links
     let name: String // name can't be nil
     let details, date_local, date_precision: String?

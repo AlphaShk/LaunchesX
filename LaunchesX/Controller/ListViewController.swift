@@ -1,4 +1,5 @@
 import UIKit
+import Network
 import SDWebImage
 
 class ListViewController: UIViewController {
@@ -13,6 +14,9 @@ class ListViewController: UIViewController {
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var tableView: UITableView!
     
+    let monitor = NWPathMonitor()
+    let queue = DispatchQueue(label: "InternetConnectionMonitor")
+    
     override func viewWillAppear(_ animated: Bool) {
         
         tableView.register(UINib(nibName: "ListCell", bundle: nil), forCellReuseIdentifier: K.cell) // Register nib for custom cell
@@ -22,17 +26,43 @@ class ListViewController: UIViewController {
         
         super.viewDidLoad()
         
-        manager.performRequest() { launches in
+        let alert = UIAlertController(title: "Internet Connection", message: "Check your internet connection", preferredStyle: .alert)
+        var canPresent = true
+        
+        monitor.pathUpdateHandler = { pathUpdateHandler in
             
-            self.model.launches = launches
-            self.loadOptions()
+            if pathUpdateHandler.status == .satisfied { // Check if user has Internet connection
+                
+                self.manager.performRequest() { launches in
+                    
+                    DispatchQueue.main.async { // Perform all UI changes from main thread
+                        
+                        alert.dismiss(animated: true)
+                    }
+                    
+                    self.model.setLaunches(new: launches)
+                    self.loadOptions()
+                }
+            } else {
+                
+                DispatchQueue.main.async {
+                    
+                    if canPresent {
+                        
+                        self.present(alert, animated: true)
+                        canPresent = false // Present alert only once
+                    }
+                }
+            }
         }
+
+        monitor.start(queue: queue)
         
     }
     
     func sortLaunches() {
         
-        model.launches = manager.sortLaunches(model.launches ?? [], by: model.sortOption)
+        model.filteredLaunches = manager.sortLaunches(model.filteredLaunches ?? [], by: model.sortOption)
         self.tableView.reloadData()
     }
     
@@ -74,28 +104,28 @@ class ListViewController: UIViewController {
         let cancel = UIAlertAction(title: "Cancel", style: .cancel)
         
         let aToz = UIAlertAction(title: "From A To Z", style: .default) {_ in
+            
             self.model.sortOption = .ascending
             self.sortLaunches()
             self.saveOptions()
-
         }
         let zToa = UIAlertAction(title: "From Z To A", style: .default) {_ in
+            
             self.model.sortOption = .descending
             self.sortLaunches()
             self.saveOptions()
-            
         }
         let fromOldest = UIAlertAction(title: "From Oldest to Newest", style: .default) {_ in
+            
             self.model.sortOption = .dateAscending
             self.sortLaunches()
             self.saveOptions()
-            
         }
         let fromNewest = UIAlertAction(title: "From Newest to Oldest", style: .default) {_ in
+            
             self.model.sortOption = .dateDescending
             self.sortLaunches()
             self.saveOptions()
-            
         }
         
         actionSheet.addAction(cancel)
@@ -118,7 +148,8 @@ class ListViewController: UIViewController {
             
             if let indexPath = tableView.indexPathForSelectedRow { // If some tableView cell was clicked
                 
-                let launches = model.filteredLaunches
+                guard let launches = model.filteredLaunches else { return } // filteredLaunches can't be nil
+                
                 ldc.imageArray = launches[indexPath.row].links.flickr.original as? [String]
                 ldc.launchName = launches[indexPath.row].name
                 ldc.details = launches[indexPath.row].details
@@ -140,14 +171,16 @@ extension ListViewController: UITableViewDelegate, UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return model.filteredLaunches.count
+        return model.filteredLaunches?.count ?? 0
     }
 
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let launches = model.filteredLaunches
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: K.cell, for: indexPath) as! ListCell
+    
+        guard let launches = model.filteredLaunches else { return cell }
         
         cell.nameLabel.text = launches[indexPath.row].name
         
@@ -190,12 +223,8 @@ extension ListViewController: UISearchBarDelegate {
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         
-        if !searchText.isEmpty {
-            model.filterString = searchText
-        } else {
-            model.filterString = nil
-        }
-        
+        let allSortedLaunches = manager.sortLaunches(model.launches ?? [], by: model.sortOption) // launches array will be used and sorted once in this function
+        model.filteredLaunches = manager.filterLaunches(filter: searchText, launches: allSortedLaunches)
         self.tableView.reloadData()
     }
     
@@ -216,6 +245,7 @@ extension Date {
         var dateString = ""
         
         switch precision {
+            
         case "quarter":
             
             formatter.dateFormat = "MM"
@@ -241,9 +271,9 @@ extension Date {
             
             if let month = Int(formatter.string(from: self)) {
                 if month <= 6 {
-                    dateString += "1HY"
+                    dateString += "1HY, "
                 } else {
-                    dateString += "2HY"
+                    dateString += "2HY, "
                 }
             }
             

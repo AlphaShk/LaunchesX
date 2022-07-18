@@ -24,6 +24,22 @@ struct LaunchManager {
         }
     }
     
+    func filterLaunches(filter filterString: String?, launches: [Launch]?) -> [Launch] {
+        if let string = filterString {
+            
+            if !string.isEmpty {
+                
+                return launches?.filter { $0.name.lowercased().contains(string.lowercased()) } ?? []
+            } else {
+                
+                return launches ?? []
+            }
+        } else {
+            
+            return launches ?? []
+        }
+    }
+    
     func sortLaunches(_  launches: [Launch], by sortOption: SortOption?) -> [Launch] {
         var result = [Launch]()
         

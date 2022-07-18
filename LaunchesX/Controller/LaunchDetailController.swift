@@ -26,16 +26,21 @@ class LaunchDetailController: UIViewController, WKUIDelegate {
             
         }
         if let details = details {
+            
             label.text = details
         } else {
+            
             label.removeFromSuperview() // Delete views from main
         }
         
         if let images = imageArray {
+            
             if images.isEmpty {
+                
                 collectionView.removeFromSuperview()
             }
         } else {
+            
             collectionView.removeFromSuperview()
         }
         
@@ -52,7 +57,9 @@ extension LaunchDetailController: UICollectionViewDelegate, UICollectionViewData
     
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: K.imgCell, for: indexPath) as! ImageCell
+        
         if let images = imageArray {
             
             cell.launchImageView.sd_setImage(with: URL(string: images[indexPath.row]))
